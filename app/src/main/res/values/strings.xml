@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Smart Sleep</string>
+    <string name="heart_rate">Heart Rate</string>
+    <string name="sound">Sound</string>
+    <string name="oxygen">Oxygen Levels</string>
+    <string name="temperature">Temperature</string>
+    <string name="motion">Motion</string>
+</resources>

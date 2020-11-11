@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/heart_rate"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:padding="20dp"
+        android:layout_margin="10dp"
+        android:textSize="30sp"
+        android:background="@android:color/holo_blue_bright"
+        android:text="@string/heart_rate" />
+
+    <TextView
+        android:id="@+id/oxygen"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:textSize="30sp"
+        android:padding="20dp"
+        android:layout_margin="10dp"
+        android:layout_gravity="center_vertical"
+        android:background="@android:color/holo_blue_bright"
+        android:text="@string/oxygen" />
+
+    <TextView
+        android:id="@+id/colors"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:padding="20dp"
+        android:textSize="30sp"
+        android:layout_margin="10dp"
+        android:background="@android:color/holo_blue_bright"
+        android:text="@string/motion" />
+
+    <TextView
+        android:id="@+id/temperature"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:padding="20dp"
+        android:layout_margin="10dp"
+        android:textSize="30sp"
+        android:background="@android:color/holo_blue_bright"
+        android:text="@string/temperature" />
+
+    <TextView
+        android:id="@+id/sound"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:padding="20dp"
+        android:layout_margin="10dp"
+        android:textSize="30sp"
+        android:background="@android:color/holo_blue_bright"
+        android:text="@string/sound" />
+
+</LinearLayout>
+
+
+
