@@ -55,7 +55,7 @@
         android:padding="20dp"
         android:layout_margin="10dp"
         android:textSize="30sp"
-        android:background="@android:color/holo_blue_bright"
+        android:background="@android:color/holo_orange_dark"
         android:text="@string/sound" />
 
 </LinearLayout>
