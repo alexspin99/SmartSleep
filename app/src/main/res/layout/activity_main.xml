@@ -9,53 +9,27 @@
 
     <TextView
         android:id="@+id/heart_rate"
-        android:layout_width="match_parent"
-        android:layout_height="88dp"
-        android:padding="20dp"
-        android:layout_margin="10dp"
-        android:textSize="30sp"
-        android:background="@android:color/holo_red_light"
+        style="@style/sensorCard"
         android:text="@string/heart_rate" />
 
     <TextView
         android:id="@+id/oxygen"
-        android:layout_width="match_parent"
-        android:layout_height="88dp"
-        android:textSize="30sp"
-        android:padding="20dp"
-        android:layout_margin="10dp"
-        android:layout_gravity="center_vertical"
-        android:background="@android:color/holo_blue_bright"
+        style="@style/sensorCard"
         android:text="@string/oxygen" />
 
     <TextView
         android:id="@+id/colors"
-        android:layout_width="match_parent"
-        android:layout_height="88dp"
-        android:padding="20dp"
-        android:textSize="30sp"
-        android:layout_margin="10dp"
-        android:background="@android:color/holo_blue_bright"
+        style="@style/sensorCard"
         android:text="@string/motion" />
 
     <TextView
         android:id="@+id/temperature"
-        android:layout_width="match_parent"
-        android:layout_height="88dp"
-        android:padding="20dp"
-        android:layout_margin="10dp"
-        android:textSize="30sp"
-        android:background="@android:color/holo_blue_bright"
+        style="@style/sensorCard"
         android:text="@string/temperature" />
 
     <TextView
         android:id="@+id/sound"
-        android:layout_width="match_parent"
-        android:layout_height="88dp"
-        android:padding="20dp"
-        android:layout_margin="10dp"
-        android:textSize="30sp"
-        android:background="@android:color/holo_orange_dark"
+        style="@style/sensorCard"
         android:text="@string/sound" />
 
 </LinearLayout>
