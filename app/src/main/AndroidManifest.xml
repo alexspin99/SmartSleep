@@ -16,6 +16,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".HeartRateActivity">
+        </activity>
+        <activity android:name=".OxygenLevelsActivity">
+        </activity>
+        <activity android:name=".MotionActivity">
+        </activity>
+        <activity android:name=".TemperatureActivity">
+        </activity>
+        <activity android:name=".SoundActivity">
+        </activity>
     </application>
 
 </manifest>

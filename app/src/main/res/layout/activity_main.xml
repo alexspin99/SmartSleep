@@ -18,7 +18,7 @@
         android:text="@string/oxygen" />
 
     <TextView
-        android:id="@+id/colors"
+        android:id="@+id/motion"
         style="@style/sensorCard"
         android:text="@string/motion" />
 
