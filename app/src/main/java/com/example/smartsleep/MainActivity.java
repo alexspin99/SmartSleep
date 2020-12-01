@@ -14,6 +14,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         // Find View for HeartRate
         TextView heartRate = (TextView) findViewById(R.id.heart_rate);
         //Set HeartRate click

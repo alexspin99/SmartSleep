@@ -3,14 +3,15 @@
     <style name="Theme.SmartSleep" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">#311b92</item>
-        <item name="colorPrimaryVariant">#000062</item>
+        <item name="colorPrimaryDark">#000062</item>
+        <item name="colorPrimaryVariant">#6745c2</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">#7fdeea</item>
         <item name="colorSecondaryVariant">#4aacb8</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryDark</item>
         <!-- Customize your theme here. -->
     </style>
 

@@ -8,17 +8,16 @@
         <item name="android:textSize">30sp</item>
         <item name="android:clickable">true</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:background">?colorPrimary</item>
+        <item name="android:background">?colorPrimaryVariant</item>
         <item name="android:foreground">?attr/selectableItemBackground</item>
         <item name="android:focusable">true</item>
         <item name="android:gravity">center</item>
     </style>
 
     <style name="summary" parent="TextAppearance.AppCompat">
-        <item name="android:textColor">?colorOnSecondary</item>
-        <item name="android:colorBackground">?colorSecondary</item>
+        <item name="android:textColor">?colorOnPrimary</item>
+        <item name="android:colorBackground">?colorPrimary</item>
         <item name="android:layout_height">88dp</item>
-        <item name="android:padding">20dp</item>
         <item name="android:layout_margin">10dp</item>
         <item name="android:textSize">30sp</item>
         <item name="android:layout_width">match_parent</item>
@@ -27,13 +26,13 @@
     </style>
 
     <style name="bigValueCard" parent="TextAppearance.AppCompat">
-        <item name="android:textColor">?colorOnSecondary</item>
+        <item name="android:textColor">?colorOnPrimary</item>
         <item name="android:layout_height">200dp</item>
         <item name="android:padding">20dp</item>
         <item name="android:layout_margin">10dp</item>
         <item name="android:textSize">30sp</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:background">?colorSecondaryVariant</item>
+        <item name="android:background">?colorPrimary</item>
         <item name="android:gravity">center</item>
     </style>
 
