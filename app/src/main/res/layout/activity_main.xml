@@ -6,7 +6,6 @@
     android:fillViewport="true"
     >
 
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -20,8 +19,11 @@
         android:layout_height="300dp"
         android:background="?colorSecondaryVariant"
         android:padding="20dp"
+        android:layout_margin="10dp"
         android:layout_gravity="center"
         android:orientation="vertical">
+
+
 
         <TextView
             style="@style/summary"
@@ -35,7 +37,6 @@
 
             />
     </LinearLayout>
-
 
     <TextView
         android:id="@+id/heart_rate"
