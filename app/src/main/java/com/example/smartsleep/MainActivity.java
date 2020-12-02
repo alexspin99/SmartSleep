@@ -1,7 +1,12 @@
 package com.example.smartsleep;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Intent;
+import android.os.Handler;
 import android.view.View;
 import android.widget.TextView;
 
@@ -13,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
 
         // Find View for HeartRate
