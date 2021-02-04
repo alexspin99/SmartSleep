@@ -15,7 +15,7 @@ public class MotionActivity extends AppCompatActivity {
 
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
-        //TODO: set text to real time sensor value
+        //TODO: access Firebase to view history of values
         sensorValue.setText("Motion Sensor Value History");
 
     }

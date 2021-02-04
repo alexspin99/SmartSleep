@@ -15,7 +15,7 @@ public class TemperatureActivity extends AppCompatActivity {
 
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
-        //TODO: set text to real time sensor value
+        //TODO: access Firebase to view history of values
         sensorValue.setText("Temperature Sensor Value History");
 
     }

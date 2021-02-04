@@ -22,8 +22,9 @@ public class HeartRateActivity extends AppCompatActivity {
 
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
-        //TODO: set text to real time sensor value
+        //TODO: access Firebase to view history of values
         sensorValue.setText("Heart Rate Sensor History");
+
 
 
 
