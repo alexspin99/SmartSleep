@@ -16,7 +16,7 @@ public class OxygenLevelsActivity extends AppCompatActivity {
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
         //TODO: set text to real time sensor value
-        sensorValue.setText("Oxygen Level Sensor Value");
+        sensorValue.setText("Oxygen Level Sensor Value History");
 
     }
 }

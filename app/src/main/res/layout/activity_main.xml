@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    >
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:fillViewport="true">
 
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -37,30 +36,113 @@
                 />
         </LinearLayout>
 
-        <TextView
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            style="@style/sensorCard"
             android:id="@+id/heart_rate"
-            style="@style/sensorCard"
-            android:text="@string/heart_rate" />
+            android:orientation="horizontal">
+            <TextView
+                style="@style/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/heart_rate"
+                app:layout_constraintLeft_toLeftOf="@id/heart_rate"
+                app:layout_constraintTop_toTopOf="@id/heart_rate"/>
+            <TextView
+                style="@style/text"
+                android:id="@+id/heart_rate_value"
+                android:text="--"
+                android:layout_gravity="right"
+                app:layout_constraintRight_toRightOf="@id/heart_rate"
+                app:layout_constraintTop_toTopOf="@id/heart_rate"/>
 
-        <TextView
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            style="@style/sensorCard"
             android:id="@+id/oxygen"
-            style="@style/sensorCard"
-            android:text="@string/oxygen" />
+            android:orientation="horizontal">
+            <TextView
+                style="@style/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/oxygen"
+                app:layout_constraintLeft_toLeftOf="@id/oxygen"
+                app:layout_constraintTop_toTopOf="@id/oxygen"/>
+            <TextView
+                style="@style/text"
+                android:id="@+id/oxygen_value"
+                android:text="--"
+                android:layout_gravity="right"
+                app:layout_constraintRight_toRightOf="@id/oxygen"
+                app:layout_constraintTop_toTopOf="@id/oxygen"/>
 
-        <TextView
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            style="@style/sensorCard"
             android:id="@+id/motion"
-            style="@style/sensorCard"
-            android:text="@string/motion" />
+            android:orientation="horizontal">
+            <TextView
+                style="@style/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/motion"
+                app:layout_constraintLeft_toLeftOf="@id/motion"
+                app:layout_constraintTop_toTopOf="@id/motion"/>
+            <TextView
+                style="@style/text"
+                android:id="@+id/motion_value"
+                android:text="--"
+                android:layout_gravity="right"
+                app:layout_constraintRight_toRightOf="@id/motion"
+                app:layout_constraintTop_toTopOf="@id/motion"/>
 
-        <TextView
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            style="@style/sensorCard"
             android:id="@+id/temperature"
-            style="@style/sensorCard"
-            android:text="@string/temperature" />
+            android:orientation="horizontal">
+            <TextView
+                style="@style/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/temperature"
+                app:layout_constraintLeft_toLeftOf="@id/temperature"
+                app:layout_constraintTop_toTopOf="@id/temperature"/>
+            <TextView
+                style="@style/text"
+                android:id="@+id/temperature_value"
+                android:text="--"
+                android:layout_gravity="right"
+                app:layout_constraintRight_toRightOf="@id/temperature"
+                app:layout_constraintTop_toTopOf="@id/temperature"/>
 
-        <TextView
-            android:id="@+id/sound"
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             style="@style/sensorCard"
-            android:text="@string/sound" />
+            android:id="@+id/sound"
+            android:orientation="horizontal">
+            <TextView
+                style="@style/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sound"
+                app:layout_constraintLeft_toLeftOf="@id/sound"
+                app:layout_constraintTop_toTopOf="@id/sound"/>
+            <TextView
+                style="@style/text"
+                android:id="@+id/sound_value"
+                android:text="--"
+                android:layout_gravity="right"
+                app:layout_constraintRight_toRightOf="@id/sound"
+                app:layout_constraintTop_toTopOf="@id/sound"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 

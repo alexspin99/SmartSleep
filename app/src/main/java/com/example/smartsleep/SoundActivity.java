@@ -16,7 +16,7 @@ public class SoundActivity extends AppCompatActivity {
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
         //TODO: set text to real time sensor value
-        sensorValue.setText("Sound Sensor Value");
+        sensorValue.setText("Sound Sensor Value History");
 
     }
 }

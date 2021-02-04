@@ -16,7 +16,7 @@ public class TemperatureActivity extends AppCompatActivity {
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
         //TODO: set text to real time sensor value
-        sensorValue.setText("Temperature Sensor Value");
+        sensorValue.setText("Temperature Sensor Value History");
 
     }
 }

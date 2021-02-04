@@ -16,7 +16,7 @@ public class MotionActivity extends AppCompatActivity {
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
 
         //TODO: set text to real time sensor value
-        sensorValue.setText("Motion Sensor Value");
+        sensorValue.setText("Motion Sensor Value History");
 
     }
 }
