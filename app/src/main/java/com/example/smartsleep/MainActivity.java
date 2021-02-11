@@ -6,13 +6,17 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -23,6 +27,12 @@ import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity {
+
+
+    //Change this depending on the address of your sample peripheral
+    String mDeviceAddress = "5D:8F:4E:76:9B:2F";
+
+
     //private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
@@ -36,6 +46,30 @@ public class MainActivity extends AppCompatActivity {
     //coarse location permission
     private static int PERMISSION_REQUEST_CODE = 1;
     private final static String TAG = MainActivity.class.getSimpleName();
+
+    private BluetoothLeService mBluetoothLeService;
+
+
+    // Code to manage Service lifecycle.
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+            if (!mBluetoothLeService.initialize()) {
+                Log.e(TAG, "Unable to initialize Bluetooth");
+                finish();
+            }
+            // Automatically connects to the device upon successful start-up initialization.
+            mBluetoothLeService.connect(mDeviceAddress);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mBluetoothLeService = null;
+        }
+    };
+
 
 
     @Override
@@ -74,9 +108,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
         //BLE Device Scan **********************************************************************************************************************
         //TODO: implement device scan to find our BLE device, create variable to store device identification
 
+
+
+        //final boolean result = mBluetoothLeService.connect(mDeviceAddress);
+        //Log.d(TAG, "Connect request result=" + result);
+
+
+
+        TextView heartRateValue = (TextView) findViewById(R.id.heart_rate_value);
+        //String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+       // if(data != null)
+         //   heartRateValue.setText(data);
 
         //TODO: later, add feature that purple view is fullscreen and after you are connected the bottom part scrolls up
 
