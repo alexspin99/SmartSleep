@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "448508620469",
+    "project_id": "smartsleep-eaadf",
+    "storage_bucket": "smartsleep-eaadf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:448508620469:android:c0fc6fb7d50e14ce3918fc",
+        "android_client_info": {
+          "package_name": "com.example.smartsleep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "448508620469-c2t83ud39qldtblh2q2tvd1dp5n5g7op.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartsleep",
+            "certificate_hash": "7e63113c5afaa36405772000755563ba45ad379d"
+          }
+        },
+        {
+          "client_id": "448508620469-qm1jntvjur2ota72g3lkuhc7fovkk35l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArq81VzZFrGaxUqBC_lZnSX2c6y6I_2qA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "448508620469-qm1jntvjur2ota72g3lkuhc7fovkk35l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
