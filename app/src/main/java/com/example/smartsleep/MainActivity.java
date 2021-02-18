@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "5D:8F:4E:76:9B:2F";
+    String mDeviceAddress = "6B:32:D9:9B:61:CA";
 
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    // Code to manage Service lifecycle.
+    // Code to manage BLE Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -84,12 +84,14 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
             // Automatically connects to the device upon successful start-up initialization.
+            Toast.makeText(MainActivity.this, "Bluetooth Initialized Successfully", Toast.LENGTH_SHORT).show();
             mBluetoothLeService.connect(mDeviceAddress);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mBluetoothLeService = null;
+            Toast.makeText(MainActivity.this, "Bluetooth Disconnected", Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -115,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this,gso);
 
+        //checks if you are already signed in
+        updateUI(mAuth.getCurrentUser());
 
         //set on click listener for sign in button
         signInButton.setOnClickListener(new View.OnClickListener(){
@@ -173,14 +177,11 @@ public class MainActivity extends AppCompatActivity {
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        //BLE Device Scan **********************************************************************************************************************
+        //BLE Device Scan START **********************************************************************************************************************
         //TODO: implement device scan to find our BLE device, create variable to store device identification
 
-
-
-        //final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-        //Log.d(TAG, "Connect request result=" + result);
-
+        //mBluetoothLeService.connect(mDeviceAddress);
+        //Log.d(TAG, "Connect request result=" + mBluetoothLeService.getSupportedGattServices());
 
 
         TextView heartRateValue = (TextView) findViewById(R.id.heart_rate_value);
@@ -189,6 +190,8 @@ public class MainActivity extends AppCompatActivity {
          //   heartRateValue.setText(data);
 
         //TODO: later, add feature that purple view is fullscreen and after you are connected the bottom part scrolls up
+
+        //BLE Device Scan END **********************************************************************************************************************
 
 
 
@@ -237,6 +240,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+
+    //Sign In Functions START ******************************************************************************************************
     private void signIn() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
@@ -296,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
+    //Sign In Functions END *******************************************************************************************
 
 
 
