@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import android.os.Bundle;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothLeService mBluetoothLeService;
 
     private SignInButton signInButton;
+    private Button signOutButton;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
     private int RC_SIGN_IN = 1;
@@ -100,7 +102,10 @@ public class MainActivity extends AppCompatActivity {
 
 
         signInButton = findViewById(R.id.sign_in_button);
+        signOutButton = findViewById(R.id.sign_out_button);
         mAuth = FirebaseAuth.getInstance();
+
+
 
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -111,13 +116,25 @@ public class MainActivity extends AppCompatActivity {
         mGoogleSignInClient = GoogleSignIn.getClient(this,gso);
 
 
-
+        //set on click listener for sign in button
         signInButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view)
             {
                 signIn();
             }
+        });
+
+        //set on click listener for sign out button
+        signOutButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                mGoogleSignInClient.signOut();
+                Toast.makeText(MainActivity.this, "You Are Logged Out", Toast.LENGTH_SHORT).show();
+                signOutButton.setVisibility(View.INVISIBLE);
+                signInButton.setVisibility(View.VISIBLE);
+            }
+
         });
 
 
@@ -267,6 +284,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI(FirebaseUser fUser){
         //make sign out button visible, show username, etc.
+
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
+        if (fUser != null) {
+            signOutButton.setText("Sign Out " + account.getEmail());
+
+            signOutButton.setVisibility(View.VISIBLE);
+            signInButton.setVisibility(View.INVISIBLE);
+        }
+
+
     }
 
 
