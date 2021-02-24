@@ -2,25 +2,36 @@ package com.example.smartsleep;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
+import android.widget.Adapter;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -43,12 +54,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 
 public class MainActivity extends AppCompatActivity {
 
 
+    //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "6B:32:D9:9B:61:CA";
+    String mDeviceAddress = "4E:F9:14:D9:6F:04";
 
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -58,14 +74,19 @@ public class MainActivity extends AppCompatActivity {
     //Bluetooth permission
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+    private static final long SCAN_PERIOD = 1000;
     //coarse location permission
     private static int PERMISSION_REQUEST_CODE = 1;
     private final static String TAG = MainActivity.class.getSimpleName();
     private BluetoothLeService mBluetoothLeService;
+    private boolean mConnected = false;
+
+    //VARIABLE OF DEVICE NAME TO CONNECT TO
+
 
     private SignInButton signInButton;
     private Button signOutButton;
+    TextView connectionTextBox;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
     private int RC_SIGN_IN = 1;
@@ -84,17 +105,39 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
             // Automatically connects to the device upon successful start-up initialization.
-            Toast.makeText(MainActivity.this, "Bluetooth Initialized Successfully", Toast.LENGTH_SHORT).show();
             mBluetoothLeService.connect(mDeviceAddress);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mBluetoothLeService = null;
-            Toast.makeText(MainActivity.this, "Bluetooth Disconnected", Toast.LENGTH_SHORT).show();
         }
     };
 
+
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                mConnected = true;
+                updateConnectionState(R.string.connected);
+                invalidateOptionsMenu();
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                mConnected = false;
+                updateConnectionState(R.string.disconnected);
+                invalidateOptionsMenu();
+                mBluetoothLeService.close();
+                mBluetoothLeService.connect(mDeviceAddress);
+                //clearUI();
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                // Show all the supported services and characteristics on the user interface.
+                //displayGattServices(mBluetoothLeService.getSupportedGattServices());
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+            }
+        }
+    };
 
 
     @Override
@@ -177,19 +220,10 @@ public class MainActivity extends AppCompatActivity {
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
+
         //BLE Device Scan START **********************************************************************************************************************
-        //TODO: implement device scan to find our BLE device, create variable to store device identification
+        //TODO: Scan for device based on name instead of hardcoding device address
 
-        //mBluetoothLeService.connect(mDeviceAddress);
-        //Log.d(TAG, "Connect request result=" + mBluetoothLeService.getSupportedGattServices());
-
-
-        TextView heartRateValue = (TextView) findViewById(R.id.heart_rate_value);
-        //String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-       // if(data != null)
-         //   heartRateValue.setText(data);
-
-        //TODO: later, add feature that purple view is fullscreen and after you are connected the bottom part scrolls up
 
         //BLE Device Scan END **********************************************************************************************************************
 
@@ -238,8 +272,47 @@ public class MainActivity extends AppCompatActivity {
             startActivity(soundIntent);
         });
 
+        connectionTextBox = (TextView) findViewById(R.id.summary_View);
+        connectionTextBox.setOnClickListener(view -> {
+            mBluetoothLeService.connect(mDeviceAddress);
+        });
+
     }
 
+
+
+    private void updateConnectionState(final int resourceId) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                connectionTextBox.setText(resourceId);
+            }
+        });
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (mBluetoothLeService != null) {
+            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
+            Log.d(TAG, "Connect request result=" + result);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mGattUpdateReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(mServiceConnection);
+        mBluetoothLeService = null;
+    }
 
 
     //Sign In Functions START ******************************************************************************************************
@@ -293,6 +366,7 @@ public class MainActivity extends AppCompatActivity {
 
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
         if (fUser != null) {
+            Toast.makeText(MainActivity.this, "Sign In Successful", Toast.LENGTH_SHORT).show();
             signOutButton.setText("Sign Out " + account.getEmail());
 
             signOutButton.setVisibility(View.VISIBLE);
@@ -304,6 +378,17 @@ public class MainActivity extends AppCompatActivity {
 
     //Sign In Functions END *******************************************************************************************
 
+
+
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
+    }
 
 
 }
