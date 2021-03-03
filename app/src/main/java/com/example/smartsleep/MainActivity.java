@@ -55,6 +55,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -179,6 +181,11 @@ public class MainActivity extends AppCompatActivity {
         //checks if you are already signed in
         updateUI(mAuth.getCurrentUser());
 
+
+        // Access a Cloud Firestore instance from your Activity
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+
         //set on click listener for sign in button
         signInButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -199,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
+
 
 
 
@@ -475,8 +483,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Sign In Functions END *******************************************************************************************
-
-
 
 
     private static IntentFilter makeGattUpdateIntentFilter() {
