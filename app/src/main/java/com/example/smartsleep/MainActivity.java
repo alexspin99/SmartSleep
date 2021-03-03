@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "62:7F:4D:A9:CE:E3";
+    String mDeviceAddress = "52:1A:AE:B4:4A:9C";
 
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -232,7 +232,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-
+        connectionTextBox = (TextView) findViewById(R.id.summary_View);
+        updateConnectionState(R.string.connecting);
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
@@ -288,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(soundIntent);
         });
 
-        connectionTextBox = (TextView) findViewById(R.id.summary_View);
+
         connectionTextBox.setOnClickListener(view -> {
             mBluetoothLeService.connect(mDeviceAddress);
         });
@@ -405,6 +406,9 @@ public class MainActivity extends AppCompatActivity {
     private void displayData(String data) {
         if (data != null) {
             heartRateValue.setText(data);
+
+            //TODO: SAVE DATA TO FIREBASE
+
         }
     }
 
