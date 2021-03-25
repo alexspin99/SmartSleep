@@ -71,6 +71,16 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String HR_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String O2_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String SOUND_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String MOTION_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String TEMP_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
 
     //TODO: add all characteristics
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
@@ -155,19 +165,62 @@ public class BluetoothLeService extends Service {
             }
             final int heartRate = characteristic.getIntValue(format, 1);
             Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-        } else {
+            intent.putExtra(HR_DATA, String.valueOf(heartRate));
+        }
+        else if (getString(R.string.O2).equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
+                for (byte byteChar : data)
                     stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
+                intent.putExtra(O2_DATA, new String(data) + "\n" + stringBuilder.toString());
             }
         }
+        else if (getString(R.string.SOUND).equals(characteristic.getUuid())) {
+            // For all other profiles, writes the data formatted in HEX.
+            final byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                final StringBuilder stringBuilder = new StringBuilder(data.length);
+                for (byte byteChar : data)
+                    stringBuilder.append(String.format("%02X ", byteChar));
+                intent.putExtra(SOUND_DATA, new String(data) + "\n" + stringBuilder.toString());
+            }
+
+        }
+        else if (getString(R.string.MOTION).equals(characteristic.getUuid())) {
+            // For all other profiles, writes the data formatted in HEX.
+            final byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                final StringBuilder stringBuilder = new StringBuilder(data.length);
+                for (byte byteChar : data)
+                    stringBuilder.append(String.format("%02X ", byteChar));
+                intent.putExtra(MOTION_DATA, new String(data) + "\n" + stringBuilder.toString());
+            }
+        }
+        else if (getString(R.string.TEMP).equals(characteristic.getUuid())) {
+            // For all other profiles, writes the data formatted in HEX.
+            final byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                final StringBuilder stringBuilder = new StringBuilder(data.length);
+                for (byte byteChar : data)
+                    stringBuilder.append(String.format("%02X ", byteChar));
+                intent.putExtra(TEMP_DATA, new String(data) + "\n" + stringBuilder.toString());
+            }
+        }
+        else {
+                // For all other profiles, writes the data formatted in HEX.
+                final byte[] data = characteristic.getValue();
+                if (data != null && data.length > 0) {
+                    final StringBuilder stringBuilder = new StringBuilder(data.length);
+                    for (byte byteChar : data)
+                        stringBuilder.append(String.format("%02X ", byteChar));
+                    intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
+                }
+            }
         sendBroadcast(intent);
     }
+
 
     public class LocalBinder extends Binder {
         BluetoothLeService getService() {
@@ -335,6 +388,18 @@ public class BluetoothLeService extends Service {
     }
 
 
+    /**
+
+    private void readHeartRateLevel(){
+        GattAttributes.lookup()
+        UUID HRServiceUuid = UUID.fromString("");
+
+        BluetoothGattCharacteristic HRCharacteristic = mBluetoothGatt.getService().getCharacteristic();
+        if (HRCharacteristic.isReadable() == true)
+            gatt.readCharacteristic(HRCharacteristic);
+    }
+
+     */
 
 
 

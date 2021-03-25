@@ -23,6 +23,7 @@
 
 
             <TextView
+                android:id="@+id/alert_View"
                 style="@style/summary"
                 android:text="Alerts:"
                 />

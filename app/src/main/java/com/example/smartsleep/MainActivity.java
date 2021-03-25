@@ -2,23 +2,14 @@ package com.example.smartsleep;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -29,25 +20,20 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.Button;
-import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -56,12 +42,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -69,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "52:1A:AE:B4:4A:9C";
+    String mDeviceAddress = "58:79:25:85:7C:4A";
+
 
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -92,16 +78,22 @@ public class MainActivity extends AppCompatActivity {
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
 
-    //VARIABLE OF DEVICE NAME TO CONNECT TO
+
 
 
     private SignInButton signInButton;
     private Button signOutButton;
     TextView connectionTextBox;
-    TextView heartRateValue;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
     private int RC_SIGN_IN = 1;
+
+    //stores characteristic of each sensor characteristic
+    BluetoothGattCharacteristic hrGattChar, o2GattChar, soundGattChar, motionGattChar, tempGattChar;
+
+    //textViews for sensor values
+    TextView oxygenValue, tempValue, soundValue, motionValue, heartRateValue, alerts;
+    ConstraintLayout hrBackground, o2Background, tempBackground, soundBackground, motionBackground;
 
 
 
@@ -119,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
             // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connect(mDeviceAddress);
         }
-
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mBluetoothLeService = null;
@@ -143,16 +134,27 @@ public class MainActivity extends AppCompatActivity {
                 mBluetoothLeService.connect(mDeviceAddress);
                 //clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                // Collects all available gatt services & characteristics
+                // Collects all needed gatt services & characteristics
                 retrieveGattServices(mBluetoothLeService.getSupportedGattServices());
 
-                //retrieves characteristic value of HR (due to .get(3).get(0) in function code)
-                //This is unique to the peripheral I am using, the index of the characteristic
-                //TODO: edit this function to retrieve all characteristic values and not rely on index
-                getCharacteristicValue();
+                //Gets char value for all sensors
+                getCharacteristicValue(hrGattChar);
+                getCharacteristicValue(o2GattChar);
+                getCharacteristicValue(soundGattChar);
+                getCharacteristicValue(tempGattChar);
+                getCharacteristicValue(motionGattChar);
+
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 
-                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                String hrData = intent.getStringExtra(BluetoothLeService.HR_DATA);
+                String o2Data = intent.getStringExtra(BluetoothLeService.O2_DATA);
+                String soundData = intent.getStringExtra(BluetoothLeService.SOUND_DATA);
+                String tempData = intent.getStringExtra(BluetoothLeService.TEMP_DATA);
+                String motionData = intent.getStringExtra(BluetoothLeService.MOTION_DATA);
+
+                //displays data and checks for simple in app alerts
+                displayData(hrData, o2Data, soundData, tempData, motionData);
+
             }
         }
     };
@@ -162,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         signInButton = findViewById(R.id.sign_in_button);
         signOutButton = findViewById(R.id.sign_out_button);
@@ -181,8 +182,7 @@ public class MainActivity extends AppCompatActivity {
         //checks if you are already signed in
         updateUI(mAuth.getCurrentUser());
 
-
-        // Access a Cloud Firestore instance from your Activity
+        // Access Cloud Firestore instance
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
 
@@ -258,41 +258,41 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Find View for HeartRate
-        ConstraintLayout heartRate = (ConstraintLayout) findViewById(R.id.heart_rate);
+        hrBackground = (ConstraintLayout) findViewById(R.id.heart_rate);
         //Set HeartRate click
-        heartRate.setOnClickListener(view -> {
+        hrBackground.setOnClickListener(view -> {
             Intent heartRateIntent = new Intent(MainActivity.this, HeartRateActivity.class);
             startActivity(heartRateIntent);
         });
 
         // Find View for OxygenLevels
-        ConstraintLayout oxygenLevels = (ConstraintLayout) findViewById(R.id.oxygen);
+        o2Background = (ConstraintLayout) findViewById(R.id.oxygen);
         //Set OxygenLevels click
-        oxygenLevels.setOnClickListener(view -> {
+        o2Background.setOnClickListener(view -> {
             Intent oxygenLevelsIntent = new Intent(MainActivity.this, OxygenLevelsActivity.class);
             startActivity(oxygenLevelsIntent);
         });
 
         // Find View for Motion
-        ConstraintLayout motion = (ConstraintLayout) findViewById(R.id.motion);
+        motionBackground = (ConstraintLayout) findViewById(R.id.motion);
         //Set Motion click
-        motion.setOnClickListener(view -> {
+        motionBackground.setOnClickListener(view -> {
             Intent motionIntent = new Intent(MainActivity.this, MotionActivity.class);
             startActivity(motionIntent);
         });
 
         // Find View for Temperature
-        ConstraintLayout temperature = (ConstraintLayout) findViewById(R.id.temperature);
+        tempBackground = (ConstraintLayout) findViewById(R.id.temperature);
         //Set Temperature click
-        temperature.setOnClickListener(view -> {
+        tempBackground.setOnClickListener(view -> {
             Intent temperatureIntent = new Intent(MainActivity.this, TemperatureActivity.class);
             startActivity(temperatureIntent);
         });
 
         // Find View for sound
-        ConstraintLayout sound = (ConstraintLayout) findViewById(R.id.sound);
+        soundBackground = (ConstraintLayout) findViewById(R.id.sound);
         //Set sound click
-        sound.setOnClickListener(view -> {
+        soundBackground.setOnClickListener(view -> {
             Intent soundIntent = new Intent(MainActivity.this, SoundActivity.class);
             startActivity(soundIntent);
         });
@@ -302,7 +302,14 @@ public class MainActivity extends AppCompatActivity {
             mBluetoothLeService.connect(mDeviceAddress);
         });
 
+
+
         heartRateValue = (TextView) findViewById(R.id.heart_rate_value);
+        oxygenValue = (TextView) findViewById(R.id.oxygen_value);
+        tempValue = (TextView) findViewById(R.id.temperature_value);
+        soundValue = (TextView) findViewById(R.id.sound_value);
+        motionValue = (TextView) findViewById(R.id.motion_value);
+        alerts = (TextView) findViewById(R.id.alert_View);
     }
 
 
@@ -340,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
         mBluetoothLeService = null;
     }
 
-    //retrieves Gatt services & characteristics from device, stores them
+    //retrieves Gatt services & characteristics from device.  Stores values of chars needed to be read
     private void retrieveGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null) return;
         String uuid = null;
@@ -366,9 +373,11 @@ public class MainActivity extends AppCompatActivity {
                     gattService.getCharacteristics();
             ArrayList<BluetoothGattCharacteristic> charas =
                     new ArrayList<BluetoothGattCharacteristic>();
+                    int index = 0;
 
-            // Loops through available Characteristics.
+            // Loops through available Characteristics
             for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+
                 charas.add(gattCharacteristic);
                 HashMap<String, String> currentCharaData = new HashMap<String, String>();
                 uuid = gattCharacteristic.getUuid().toString();
@@ -376,19 +385,33 @@ public class MainActivity extends AppCompatActivity {
                         LIST_NAME, GattAttributes.lookup(uuid, unknownCharaString));
                 currentCharaData.put(LIST_UUID, uuid);
                 gattCharacteristicGroupData.add(currentCharaData);
+
+
+                //checks if chara is one of the needed sensor charas
+                if(uuid.equals(getString(R.string.HR)))
+                    hrGattChar = gattCharacteristic;
+                if (uuid.equals(getString(R.string.O2)))
+                    o2GattChar = gattCharacteristic;
+                if (uuid.equals(getString(R.string.SOUND)))
+                    soundGattChar = gattCharacteristic;
+                if (uuid.equals(getString(R.string.MOTION)))
+                    motionGattChar = gattCharacteristic;
+                if (uuid.equals(getString(R.string.TEMP)))
+                    tempGattChar = gattCharacteristic;
+
+                index++;
             }
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
         }
     }
 
-    private boolean getCharacteristicValue()
+    private boolean getCharacteristicValue(BluetoothGattCharacteristic desiredChar)
     {
 
         if (mGattCharacteristics != null) {
-            //TODO: Hardcoded 3 and 0 in here to try and retrieve HR value
-            final BluetoothGattCharacteristic characteristic =
-                    mGattCharacteristics.get(3).get(0);
+
+            final BluetoothGattCharacteristic characteristic = desiredChar;
             final int charaProp = characteristic.getProperties();
             if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
                 // If there is an active notification on a characteristic, clear
@@ -411,14 +434,60 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //displays data
-    private void displayData(String data) {
-        if (data != null) {
-            heartRateValue.setText(data);
+    private void displayData(String hrData, String o2Data, String motionData, String tempData, String soundData) {
+        if (hrData != null) {
+
+            heartRateValue.setText(hrData);
+            oxygenValue.setText(o2Data);
+            motionValue.setText(motionData);
+            tempValue.setText(tempData);
+            soundValue.setText(soundData);
+
+            checkForAlerts(hrData, o2Data, motionData, tempData, soundData);
+
 
             //TODO: SAVE DATA TO FIREBASE
 
+
         }
     }
+
+    private void checkForAlerts(String hrData, String o2Data, String motionData, String tempData, String soundData){
+        int HRdata = Integer.parseInt(hrData);
+
+        //70-190 bpm is healthy resting heart rate for a newborn
+        int HRmin = 80;
+        int HRmax = 190;
+        hrAlerts(HRmax, HRmin, HRdata);
+
+    }
+
+    private void hrAlerts(int HRmax, int HRmin, int HRdata){
+
+        if (HRdata > HRmax)
+        {
+            alerts.setText("HIGH HEART RATE");
+            hrBackground.setBackgroundColor(getColor(R.color.alert));
+        }
+        else if (HRdata < HRmin)
+        {
+            alerts.setText("LOW HEART RATE");
+            hrBackground.setBackgroundColor(getColor(R.color.alert));
+        }
+        else
+        {
+            alerts.setText("No Alerts.");
+            hrBackground.setBackgroundColor(getColor(R.color.sensorBackgroundColor));
+        }
+
+
+
+
+    }
+
+
+
+
 
 
     //Sign In Functions START ******************************************************************************************************
@@ -483,6 +552,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Sign In Functions END *******************************************************************************************
+
+
 
 
     private static IntentFilter makeGattUpdateIntentFilter() {
