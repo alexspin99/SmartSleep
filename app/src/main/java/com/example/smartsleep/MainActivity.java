@@ -417,8 +417,7 @@ public class MainActivity extends AppCompatActivity {
                 // If there is an active notification on a characteristic, clear
                 // it first so it doesn't update the data field on the user interface.
                 if (mNotifyCharacteristic != null) {
-                    mBluetoothLeService.setCharacteristicNotification(
-                            mNotifyCharacteristic, false);
+                    //mBluetoothLeService.setCharacteristicNotification(mNotifyCharacteristic, false);
                     mNotifyCharacteristic = null;
                 }
                 mBluetoothLeService.readCharacteristic(characteristic);
@@ -458,25 +457,31 @@ public class MainActivity extends AppCompatActivity {
         //70-190 bpm is healthy resting heart rate for a newborn
         int HRmin = 80;
         int HRmax = 190;
-        hrAlerts(HRmax, HRmin, HRdata);
+        Alerts(HRmax, HRmin, HRdata);
+
+        /**   Add alerts for all other sensors, make sure correct sensor is sent.
+         * Maybe add parameter saying which sensor
+        Alerts(O2max, O2min, o2Data);
+        Alerts(MotionMax, MotionMin, motionData);
+        Alerts(TempMax, TempMin, tempData);
+        Alerts(SoundMax, SoundMin, soundData);
+         **/
+
 
     }
 
-    private void hrAlerts(int HRmax, int HRmin, int HRdata){
+    private void Alerts(int HRmax, int HRmin, int HRdata){
 
-        if (HRdata > HRmax)
-        {
+        if (HRdata > HRmax) {
             alerts.setText("HIGH HEART RATE");
             hrBackground.setBackgroundColor(getColor(R.color.alert));
         }
-        else if (HRdata < HRmin)
-        {
+        else if (HRdata < HRmin) {
             alerts.setText("LOW HEART RATE");
             hrBackground.setBackgroundColor(getColor(R.color.alert));
         }
-        else
-        {
-            alerts.setText("No Alerts.");
+        else {
+            alerts.setText("Healthy Environment.");
             hrBackground.setBackgroundColor(getColor(R.color.sensorBackgroundColor));
         }
 

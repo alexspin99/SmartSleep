@@ -27,9 +27,9 @@
     <!-- BLUETOOTH GATT CHARACTERISTIC STRINGS -->
     <string name="HR">00002a37-0000-1000-8000-00805f9b34fb</string>
     <string name="O2">00002a19-0000-1000-8000-00805f9b34fb</string>
-    <string name="SOUND">00002a37-0000-1000-8000-00805f9b34fb</string>
-    <string name="MOTION">00002a37-0000-1000-8000-00805f9b34fb</string>
-    <string name="TEMP">00002a37-0000-1000-8000-00805f9b34fb</string>
+    <string name="SOUND">d7ba322c-8209-11eb-8dcd-0242ac130003</string>
+    <string name="MOTION">d7ba37fe-8209-11eb-8dcd-0242ac130003</string>
+    <string name="TEMP">d7ba345c-8209-11eb-8dcd-0242ac130003</string>
 
     <!-- Menu items -->
     <string name="menu_connect">Connect</string>

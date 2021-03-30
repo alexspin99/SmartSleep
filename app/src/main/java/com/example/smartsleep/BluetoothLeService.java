@@ -120,7 +120,6 @@ public class BluetoothLeService extends Service {
             }
         }
 
-        //TODO: upload characteristic values to firebase after they are read
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
@@ -130,7 +129,7 @@ public class BluetoothLeService extends Service {
             }
         }
 
-        //TODO: update textviews if characteristic changes
+
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
