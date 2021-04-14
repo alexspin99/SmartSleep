@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.ScanFilter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -55,7 +56,10 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "76:3A:7D:EE:78:A4";
+    String mDeviceAddress = "64:CB:6F:B1:6A:16";
+    String deviceName = "SmartSock";
+
+
 
 
 
@@ -254,9 +258,16 @@ public class MainActivity extends AppCompatActivity {
         //TODO: Scan for device based on name instead of hardcoding device address
 
 
+
+        /**ScanFilter filter = new ScanFilter.Builder()
+                .setDeviceName(deviceName)
+                .build();
+        scanner.startScan(filter, scanSettings, scanCallback);8**/
+
         //BLE Device Scan END **********************************************************************************************************************
 
 
+        //mBluetoothLeService.connect (mDeviceAddress);
 
         //Initialize TextViews and onClick *****************************************************************************************************
 
