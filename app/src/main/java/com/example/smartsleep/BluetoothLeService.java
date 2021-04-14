@@ -42,6 +42,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 
 /**
@@ -72,15 +73,18 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
     public final static String HR_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
+            "HR";
     public final static String O2_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
-    public final static String SOUND_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
+            "O2";
+    public final static String SOUND_DATA = "SOUND";
     public final static String MOTION_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
+            "MOTION";
     public final static String TEMP_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
+            "TEMP";
+
+    //Creates queue to handle multi-characteristic read
+    private Queue<Runnable> commandQueue;
+    private boolean commandQueueBusy;
 
     //TODO: add all characteristics
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
@@ -168,13 +172,18 @@ public class BluetoothLeService extends Service {
         }
         else if (getString(R.string.O2).equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(O2_DATA, new String(data) + "\n" + stringBuilder.toString());
+            int flag = characteristic.getProperties();
+            int format = -1;
+            if ((flag & 0x01) != 0) {
+                format = BluetoothGattCharacteristic.FORMAT_UINT16;
+                Log.d(TAG, "O2 format UINT16.");
+            } else {
+                format = BluetoothGattCharacteristic.FORMAT_UINT8;
+                Log.d(TAG, "O2 format UINT8.");
             }
+            final int data = characteristic.getIntValue(format, 1);
+            Log.d(TAG, String.format("Received O2: %d", data));
+            intent.putExtra(O2_DATA, String.valueOf(data));
         }
         else if (getString(R.string.SOUND).equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
@@ -183,6 +192,7 @@ public class BluetoothLeService extends Service {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
                 for (byte byteChar : data)
                     stringBuilder.append(String.format("%02X ", byteChar));
+                Log.d(TAG, String.format("Received SOUND: %d", data));
                 intent.putExtra(SOUND_DATA, new String(data) + "\n" + stringBuilder.toString());
             }
 
@@ -344,11 +354,15 @@ public class BluetoothLeService extends Service {
      * @param characteristic The characteristic to read from.
      */
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
+
+        // NOT USING QUEUE
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         mBluetoothGatt.readCharacteristic(characteristic);
+
+
     }
 
     /**
@@ -399,8 +413,6 @@ public class BluetoothLeService extends Service {
     }
 
      */
-
-
 
 
 

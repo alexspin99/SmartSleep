@@ -47,6 +47,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "58:79:25:85:7C:4A";
+    String mDeviceAddress = "76:3A:7D:EE:78:A4";
 
 
 
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private BluetoothGattCharacteristic mNotifyCharacteristic;
+    private Queue<BluetoothGattCharacteristic> characteristicReadQueue;
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
@@ -88,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private int RC_SIGN_IN = 1;
 
-    //stores characteristic of each sensor characteristic
-    BluetoothGattCharacteristic hrGattChar, o2GattChar, soundGattChar, motionGattChar, tempGattChar;
+    //stores characteristic of each sensor characteristic, initializes to null so it doesn't crash if it doesn't find characteristic
+    BluetoothGattCharacteristic hrGattChar = null, o2GattChar = null , soundGattChar = null, motionGattChar = null, tempGattChar = null;
 
     //textViews for sensor values
     TextView oxygenValue, tempValue, soundValue, motionValue, heartRateValue, alerts;
@@ -138,11 +140,13 @@ public class MainActivity extends AppCompatActivity {
                 retrieveGattServices(mBluetoothLeService.getSupportedGattServices());
 
                 //Gets char value for all sensors
+
                 getCharacteristicValue(hrGattChar);
                 getCharacteristicValue(o2GattChar);
                 getCharacteristicValue(soundGattChar);
                 getCharacteristicValue(tempGattChar);
                 getCharacteristicValue(motionGattChar);
+
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 
@@ -390,14 +394,19 @@ public class MainActivity extends AppCompatActivity {
                 //checks if chara is one of the needed sensor charas
                 if(uuid.equals(getString(R.string.HR)))
                     hrGattChar = gattCharacteristic;
+                    //characteristicReadQueue.add(gattCharacteristic);
                 if (uuid.equals(getString(R.string.O2)))
                     o2GattChar = gattCharacteristic;
+                    //characteristicReadQueue.add(gattCharacteristic);
                 if (uuid.equals(getString(R.string.SOUND)))
                     soundGattChar = gattCharacteristic;
+                    //characteristicReadQueue.add(gattCharacteristic);
                 if (uuid.equals(getString(R.string.MOTION)))
                     motionGattChar = gattCharacteristic;
+                    //characteristicReadQueue.add(gattCharacteristic);
                 if (uuid.equals(getString(R.string.TEMP)))
                     tempGattChar = gattCharacteristic;
+                    //characteristicReadQueue.add(gattCharacteristic);
 
                 index++;
             }
@@ -409,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean getCharacteristicValue(BluetoothGattCharacteristic desiredChar)
     {
 
-        if (mGattCharacteristics != null) {
+        if (mGattCharacteristics != null && desiredChar != null) {
 
             final BluetoothGattCharacteristic characteristic = desiredChar;
             final int charaProp = characteristic.getProperties();
@@ -557,8 +566,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Sign In Functions END *******************************************************************************************
-
-
 
 
     private static IntentFilter makeGattUpdateIntentFilter() {
