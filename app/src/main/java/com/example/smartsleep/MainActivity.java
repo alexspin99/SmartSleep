@@ -36,6 +36,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -46,8 +48,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 
@@ -56,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "64:CB:6F:B1:6A:16";
+    String mDeviceAddress = "5D:A4:70:85:05:F6";
     String deviceName = "SmartSock";
 
 
@@ -81,12 +85,13 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     private Queue<BluetoothGattCharacteristic> characteristicReadQueue;
 
+
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
 
 
 
-
+    FirebaseFirestore db;
     private SignInButton signInButton;
     private Button signOutButton;
     TextView connectionTextBox;
@@ -191,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         updateUI(mAuth.getCurrentUser());
 
         // Access Cloud Firestore instance
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
 
 
         //set on click listener for sign in button
@@ -472,7 +477,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkForAlerts(String hrData, String o2Data, String motionData, String tempData, String soundData){
+        String currentTime = new Date().toString();
+
         int HRdata = Integer.parseInt(hrData);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("HR", HRdata);
+        data.put("O2", "--");
+        data.put("Motion", "--");
+        data.put("Sound", "--");
+        data.put("Temp", "--");
+
+        //Upload data to cloud
+        db.collection("users").document("me").collection("data").document(currentTime)
+                .set(data)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully written!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error writing document", e);
+                    }
+                });
 
         //70-190 bpm is healthy resting heart rate for a newborn
         int HRmin = 80;
