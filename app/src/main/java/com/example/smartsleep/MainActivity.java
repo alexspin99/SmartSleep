@@ -44,7 +44,11 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 
 import java.util.ArrayList;
@@ -60,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "5D:A4:70:85:05:F6";
+    String mDeviceAddress = "6B:AB:D0:5B:4F:F7";
     String deviceName = "SmartSock";
 
 
@@ -92,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     FirebaseFirestore db;
+    DocumentReference userDatabase = null;
     private SignInButton signInButton;
     private Button signOutButton;
     TextView connectionTextBox;
@@ -181,7 +186,8 @@ public class MainActivity extends AppCompatActivity {
         signInButton = findViewById(R.id.sign_in_button);
         signOutButton = findViewById(R.id.sign_out_button);
         mAuth = FirebaseAuth.getInstance();
-
+        // Access Cloud Firestore instance
+        db = FirebaseFirestore.getInstance();
 
 
         // Configure Google Sign In
@@ -194,10 +200,6 @@ public class MainActivity extends AppCompatActivity {
 
         //checks if you are already signed in
         updateUI(mAuth.getCurrentUser());
-
-        // Access Cloud Firestore instance
-        db = FirebaseFirestore.getInstance();
-
 
         //set on click listener for sign in button
         signInButton.setOnClickListener(new View.OnClickListener(){
@@ -469,40 +471,24 @@ public class MainActivity extends AppCompatActivity {
 
             checkForAlerts(hrData, o2Data, motionData, tempData, soundData);
 
+            //Creates map to upload to cloud
+            Map<String, Object> data = new HashMap<>();
+            data.put("HR", Integer.parseInt(hrData));
+            data.put("O2", "--");
+            data.put("Motion", "--");
+            data.put("Sound", "--");
+            data.put("Temp", "--");
 
-            //TODO: SAVE DATA TO FIREBASE
-
+            //Upload data to cloud
+            uploadToFirestore(data);
 
         }
     }
 
     private void checkForAlerts(String hrData, String o2Data, String motionData, String tempData, String soundData){
-        String currentTime = new Date().toString();
-
+        //retrieve data
         int HRdata = Integer.parseInt(hrData);
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("HR", HRdata);
-        data.put("O2", "--");
-        data.put("Motion", "--");
-        data.put("Sound", "--");
-        data.put("Temp", "--");
-
-        //Upload data to cloud
-        db.collection("users").document("me").collection("data").document(currentTime)
-                .set(data)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully written!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error writing document", e);
-                    }
-                });
 
         //70-190 bpm is healthy resting heart rate for a newborn
         int HRmin = 80;
@@ -540,7 +526,49 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void uploadToFirestore(Map<String, Object> data){
+        String currentTime = new Date().toString();
 
+        //create document path to user
+
+
+
+        if (userDatabase != null){
+            userDatabase.collection("data").document(currentTime)
+                    .set(data)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "DocumentSnapshot successfully written!");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error writing document", e);
+                        }
+                    });
+        }
+        else{
+            db.collection("users").document("noUser").collection("data").document(currentTime)
+                    .set(data)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "DocumentSnapshot successfully written!");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error writing document", e);
+                        }
+                    });
+        }
+
+
+
+    }
 
 
 
@@ -597,13 +625,64 @@ public class MainActivity extends AppCompatActivity {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
         if (fUser != null) {
             Toast.makeText(MainActivity.this, "Sign In Successful", Toast.LENGTH_SHORT).show();
-            signOutButton.setText("Sign Out " + account.getEmail());
 
+            //find cloud database user collection
+            db.collection("users").whereEqualTo("UID", fUser.getUid())
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                    //sets user database to their collection
+                                    if(document.exists())
+                                        userDatabase = document.getReference();
+                                    else
+                                        addUserToDatabase(fUser);
+                                }
+                            }
+                            else {
+                                Log.v(TAG, "Query for user failed: ", task.getException());
+
+                            }
+                        }
+                    });
+
+
+            signOutButton.setText("Sign Out " + account.getEmail());
             signOutButton.setVisibility(View.VISIBLE);
             signInButton.setVisibility(View.INVISIBLE);
         }
 
 
+    }
+
+    public void addUserToDatabase(FirebaseUser fUser){
+
+        Map<String, Object> user = new HashMap<>();
+        user.put("UID", fUser.getUid());
+
+        String username = fUser.getDisplayName();
+
+
+        Log.d(TAG, "Attempting to add new user " + username);
+        db.collection("users").document(username)
+                .set(user)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "New user added to database successfully!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "New user not added to database", e);
+                    }
+                });
+
+        userDatabase = db.collection("users").document(username);
     }
 
     //Sign In Functions END *******************************************************************************************
