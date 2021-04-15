@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "6B:AB:D0:5B:4F:F7";
+    String mDeviceAddress = "4F:92:55:C3:C4:FE";
     String deviceName = "SmartSock";
 
 
@@ -633,19 +633,28 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    Log.d(TAG, document.getId() + " => " + document.getData());
-                                    //sets user database to their collection
-                                    if(document.exists())
+                                QuerySnapshot querySnapshot = task.getResult();
+                                if (querySnapshot.isEmpty()) {
+                                    //adds user to database
+                                    Log.d(TAG, "User DNE in database ");
+                                    addUserToDatabase(fUser);
+
+                                } else {
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                        Log.d(TAG, document.getId() + " => " + document.getData());
+                                        //sets user database to their collection
+                                        Log.d(TAG, "User is in database");
                                         userDatabase = document.getReference();
-                                    else
-                                        addUserToDatabase(fUser);
+
+
+                                    }
                                 }
                             }
                             else {
                                 Log.v(TAG, "Query for user failed: ", task.getException());
 
                             }
+
                         }
                     });
 
