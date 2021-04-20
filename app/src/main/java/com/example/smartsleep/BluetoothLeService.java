@@ -35,6 +35,7 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -62,33 +63,30 @@ public class BluetoothLeService extends Service {
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
-    public final static String ACTION_GATT_CONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
-    public final static String HR_DATA =
-            "HR";
-    public final static String O2_DATA =
-            "O2";
+    public final static String ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String HR_DATA = "HR";
+    public final static String O2_DATA = "O2";
     public final static String SOUND_DATA = "SOUND";
-    public final static String MOTION_DATA =
-            "MOTION";
-    public final static String TEMP_DATA =
-            "TEMP";
+    public final static String MOTION_DATA = "MOTION";
+    public final static String TEMP_DATA = "TEMP";
+
+    private String hr_data, o2_data, sound_data, motion_data, temp_data;
 
     //Creates queue to handle multi-characteristic read
     private Queue<Runnable> commandQueue;
     private boolean commandQueueBusy;
 
     //TODO: add all characteristics
-    public final static UUID UUID_HEART_RATE_MEASUREMENT =
-            UUID.fromString(GattAttributes.HEART_RATE_MEASUREMENT);
+    public UUID UUID_HEART_RATE_MEASUREMENT;
+    public UUID UUID_MOTION_MEASUREMENT;
+    public UUID UUID_SOUND_MEASUREMENT;
+    public UUID UUID_O2_MEASUREMENT;
+    public UUID UUID_TEMP_MEASUREMENT;
+
 
 
 
@@ -146,6 +144,7 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
 
+
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
@@ -170,7 +169,7 @@ public class BluetoothLeService extends Service {
             Log.d(TAG, String.format("Received heart rate: %d", heartRate));
             intent.putExtra(HR_DATA, String.valueOf(heartRate));
         }
-        else if (getString(R.string.O2).equals(characteristic.getUuid())) {
+        else if (UUID_O2_MEASUREMENT.equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
             int flag = characteristic.getProperties();
             int format = -1;
@@ -185,7 +184,7 @@ public class BluetoothLeService extends Service {
             Log.d(TAG, String.format("Received O2: %d", data));
             intent.putExtra(O2_DATA, String.valueOf(data));
         }
-        else if (getString(R.string.SOUND).equals(characteristic.getUuid())) {
+        else if (UUID_SOUND_MEASUREMENT.equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -197,7 +196,7 @@ public class BluetoothLeService extends Service {
             }
 
         }
-        else if (getString(R.string.MOTION).equals(characteristic.getUuid())) {
+        else if (UUID_MOTION_MEASUREMENT.equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -207,7 +206,7 @@ public class BluetoothLeService extends Service {
                 intent.putExtra(MOTION_DATA, new String(data) + "\n" + stringBuilder.toString());
             }
         }
-        else if (getString(R.string.TEMP).equals(characteristic.getUuid())) {
+        else if (UUID_TEMP_MEASUREMENT.equals(characteristic.getUuid())) {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -261,6 +260,13 @@ public class BluetoothLeService extends Service {
     public boolean initialize() {
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
+
+        UUID_HEART_RATE_MEASUREMENT = UUID.fromString(getString(R.string.HR));
+        UUID_MOTION_MEASUREMENT = UUID.fromString(getString(R.string.MOTION));
+        UUID_SOUND_MEASUREMENT = UUID.fromString(getString(R.string.SOUND));
+        UUID_O2_MEASUREMENT = UUID.fromString(getString(R.string.O2));
+        UUID_TEMP_MEASUREMENT = UUID.fromString(getString(R.string.TEMP));
+
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {

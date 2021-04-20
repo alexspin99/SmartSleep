@@ -64,11 +64,8 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "4F:92:55:C3:C4:FE";
+    String mDeviceAddress = "47:A7:7A:0C:0A:3A";
     String deviceName = "SmartSock";
-
-
-
 
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
@@ -89,11 +86,8 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothGattCharacteristic mNotifyCharacteristic;
     private Queue<BluetoothGattCharacteristic> characteristicReadQueue;
 
-
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
-
-
 
     FirebaseFirestore db;
     DocumentReference userDatabase = null;
@@ -106,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
     //stores characteristic of each sensor characteristic, initializes to null so it doesn't crash if it doesn't find characteristic
     BluetoothGattCharacteristic hrGattChar = null, o2GattChar = null , soundGattChar = null, motionGattChar = null, tempGattChar = null;
+    BluetoothGattCharacteristic[] desiredChars = {hrGattChar, o2GattChar, soundGattChar, motionGattChar, tempGattChar};
 
     //textViews for sensor values
     TextView oxygenValue, tempValue, soundValue, motionValue, heartRateValue, alerts;
@@ -134,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
+
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -152,14 +148,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Collects all needed gatt services & characteristics
                 retrieveGattServices(mBluetoothLeService.getSupportedGattServices());
-
-                //Gets char value for all sensors
-
-                getCharacteristicValue(hrGattChar);
-                getCharacteristicValue(o2GattChar);
-                getCharacteristicValue(soundGattChar);
-                getCharacteristicValue(tempGattChar);
-                getCharacteristicValue(motionGattChar);
+                getCharacteristicValues();
 
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -411,20 +400,16 @@ public class MainActivity extends AppCompatActivity {
 
                 //checks if chara is one of the needed sensor charas
                 if(uuid.equals(getString(R.string.HR)))
-                    hrGattChar = gattCharacteristic;
-                    //characteristicReadQueue.add(gattCharacteristic);
+                    desiredChars[0] = gattCharacteristic;
                 if (uuid.equals(getString(R.string.O2)))
-                    o2GattChar = gattCharacteristic;
-                    //characteristicReadQueue.add(gattCharacteristic);
+                    desiredChars[1] = gattCharacteristic;
                 if (uuid.equals(getString(R.string.SOUND)))
-                    soundGattChar = gattCharacteristic;
-                    //characteristicReadQueue.add(gattCharacteristic);
+                    desiredChars[2] = gattCharacteristic;
                 if (uuid.equals(getString(R.string.MOTION)))
-                    motionGattChar = gattCharacteristic;
-                    //characteristicReadQueue.add(gattCharacteristic);
+                    desiredChars[3] = gattCharacteristic;
                 if (uuid.equals(getString(R.string.TEMP)))
-                    tempGattChar = gattCharacteristic;
-                    //characteristicReadQueue.add(gattCharacteristic);
+                    desiredChars[4] = gattCharacteristic;
+
 
                 index++;
             }
@@ -433,30 +418,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean getCharacteristicValue(BluetoothGattCharacteristic desiredChar)
+    private void getCharacteristicValues()
     {
+        //loops through all characteristics in desiredChars loop
+        for (int i = 0; i < 5; i++) {
+            BluetoothGattCharacteristic desiredChar = desiredChars[i];
+            if (mGattCharacteristics != null && desiredChar != null) {
 
-        if (mGattCharacteristics != null && desiredChar != null) {
-
-            final BluetoothGattCharacteristic characteristic = desiredChar;
-            final int charaProp = characteristic.getProperties();
-            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                // If there is an active notification on a characteristic, clear
-                // it first so it doesn't update the data field on the user interface.
-                if (mNotifyCharacteristic != null) {
-                    //mBluetoothLeService.setCharacteristicNotification(mNotifyCharacteristic, false);
-                    mNotifyCharacteristic = null;
+                final BluetoothGattCharacteristic characteristic = desiredChar;
+                final int charaProp = characteristic.getProperties();
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                    // If there is an active notification on a characteristic, clear
+                    // it first so it doesn't update the data field on the user interface.
+                    if (mNotifyCharacteristic != null) {
+                        //mBluetoothLeService.setCharacteristicNotification(mNotifyCharacteristic, false);
+                        mNotifyCharacteristic = null;
+                    }
+                    mBluetoothLeService.readCharacteristic(characteristic);
                 }
-                mBluetoothLeService.readCharacteristic(characteristic);
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                    mNotifyCharacteristic = characteristic;
+                    mBluetoothLeService.setCharacteristicNotification(
+                            characteristic, true);
+                }
             }
-            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                mNotifyCharacteristic = characteristic;
-                mBluetoothLeService.setCharacteristicNotification(
-                        characteristic, true);
-            }
-            return true;
         }
-        return false;
     }
 
     //displays data

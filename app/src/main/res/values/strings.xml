@@ -6,7 +6,7 @@
     <string name="temperature">Temperature</string>
     <string name="motion">Motion</string>
 
-
+    <string name="preference_file_key">com.example.smartsleep.PREFERENCE_FILE_KEY</string>
 
 
     <!-- BLUETOOTH STRINGS -->
@@ -26,7 +26,7 @@
 
     <!-- BLUETOOTH GATT CHARACTERISTIC STRINGS -->
     <string name="HR">00002a37-0000-1000-8000-00805f9b34fb</string>
-    <string name="O2">00002a2b-0000-1000-8000-00805f9b34fb</string>
+    <string name="O2">00002a35-0000-1000-8000-00805f9b34fb</string>
     <string name="SOUND">d7ba322c-8209-11eb-8dcd-0242ac130003</string>
     <string name="MOTION">d7ba37fe-8209-11eb-8dcd-0242ac130003</string>
     <string name="TEMP">d7ba345c-8209-11eb-8dcd-0242ac130003</string>
