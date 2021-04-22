@@ -194,17 +194,17 @@ public class BluetoothLeService extends Service {
                 SENSOR_DATA[1] = String.valueOf(finalData);
             }
             else if (UUID_MOTION_MEASUREMENT.equals(characteristic.getUuid())) {
-                Log.d(TAG, String.format("Received MOTION: %d", finalData));
+                Log.d(TAG, String.format("Received MOTION: " + finalData));
                 //intent.putExtra(MOTION_DATA, String.valueOf(finalData));
                 SENSOR_DATA[2] = String.valueOf(finalData);
             }
             else if (UUID_TEMP_MEASUREMENT.equals(characteristic.getUuid())) {
-                Log.d(TAG, String.format("Received TEMP: %d", finalData));
+                Log.d(TAG, String.format("Received TEMP: " + finalData));
                 //intent.putExtra(TEMP_DATA, String.valueOf(finalData));
                 SENSOR_DATA[3] = String.valueOf(finalData);
             }
             else if (UUID_SOUND_MEASUREMENT.equals(characteristic.getUuid())) {
-                Log.d(TAG, String.format("Received SOUND: %d", finalData));
+                Log.d(TAG, String.format("Received SOUND: " + finalData));
                 //intent.putExtra(SOUND_DATA, String.valueOf(finalData));
                 SENSOR_DATA[4] = String.valueOf(finalData);
             }
