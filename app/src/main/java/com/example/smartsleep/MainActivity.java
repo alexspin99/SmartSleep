@@ -51,9 +51,11 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -61,12 +63,10 @@ import java.util.Queue;
 
 public class MainActivity extends AppCompatActivity {
 
-
     //TODO: Delete this when scanning for device by name is implemented
     //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "47:A7:7A:0C:0A:3A";
+    String mDeviceAddress = "66:93:13:80:9B:D4";
     String deviceName = "SmartSock";
-
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private BluetoothGattCharacteristic mNotifyCharacteristic;
-    private Queue<BluetoothGattCharacteristic> characteristicReadQueue;
+    private ArrayDeque<BluetoothGattCharacteristic> characteristicReadQueue = new ArrayDeque<BluetoothGattCharacteristic>();
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
@@ -146,21 +146,28 @@ public class MainActivity extends AppCompatActivity {
                 mBluetoothLeService.connect(mDeviceAddress);
                 //clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+
                 // Collects all needed gatt services & characteristics
+                //performs first read chara
                 retrieveGattServices(mBluetoothLeService.getSupportedGattServices());
-                getCharacteristicValues();
 
 
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 
-                String hrData = intent.getStringExtra(BluetoothLeService.HR_DATA);
-                String o2Data = intent.getStringExtra(BluetoothLeService.O2_DATA);
-                String soundData = intent.getStringExtra(BluetoothLeService.SOUND_DATA);
-                String tempData = intent.getStringExtra(BluetoothLeService.TEMP_DATA);
-                String motionData = intent.getStringExtra(BluetoothLeService.MOTION_DATA);
 
-                //displays data and checks for simple in app alerts
-                displayData(hrData, o2Data, soundData, tempData, motionData);
+                Log.i(TAG, "Collecting data");
+
+                String[] sensorData = intent.getStringArrayExtra("SENSOR_DATA");
+
+                // Collecting the incoming data
+                displayData(sensorData[0], sensorData[1], sensorData[2], sensorData[3], sensorData[4]);
+
+                Log.d(TAG, sensorData[0] + sensorData[1] + sensorData[2] + sensorData[3] + sensorData[4]);
+
+                if(characteristicReadQueue.size() > 0)
+                {
+                    getCharacteristicValues();
+                };
 
             }
         }
@@ -181,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestIdToken("448508620469-c2t83ud39qldtblh2q2tvd1dp5n5g7op.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
 
@@ -399,87 +406,130 @@ public class MainActivity extends AppCompatActivity {
 
 
                 //checks if chara is one of the needed sensor charas
-                if(uuid.equals(getString(R.string.HR)))
+                //adds them to queue and saves in array
+                if(uuid.equals(getString(R.string.HR))){
                     desiredChars[0] = gattCharacteristic;
-                if (uuid.equals(getString(R.string.O2)))
+                    characteristicReadQueue.add(desiredChars[0]);
+                }
+                if (uuid.equals(getString(R.string.O2))){
                     desiredChars[1] = gattCharacteristic;
-                if (uuid.equals(getString(R.string.SOUND)))
+                    characteristicReadQueue.add(desiredChars[1]);
+                }
+                if (uuid.equals(getString(R.string.SOUND))){
                     desiredChars[2] = gattCharacteristic;
-                if (uuid.equals(getString(R.string.MOTION)))
+                    characteristicReadQueue.add(desiredChars[2]);
+                }
+                if (uuid.equals(getString(R.string.MOTION))){
                     desiredChars[3] = gattCharacteristic;
-                if (uuid.equals(getString(R.string.TEMP)))
+                    characteristicReadQueue.add(desiredChars[3]);
+                }
+                if (uuid.equals(getString(R.string.TEMP))){
                     desiredChars[4] = gattCharacteristic;
-
+                    characteristicReadQueue.add(desiredChars[4]);
+                }
 
                 index++;
             }
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
+
+            getCharacteristicValues();
         }
     }
 
     private void getCharacteristicValues()
     {
-        //loops through all characteristics in desiredChars loop
-        for (int i = 0; i < 5; i++) {
-            BluetoothGattCharacteristic desiredChar = desiredChars[i];
-            if (mGattCharacteristics != null && desiredChar != null) {
+        if (!characteristicReadQueue.isEmpty()) {
 
-                final BluetoothGattCharacteristic characteristic = desiredChar;
-                final int charaProp = characteristic.getProperties();
-                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                    // If there is an active notification on a characteristic, clear
-                    // it first so it doesn't update the data field on the user interface.
-                    if (mNotifyCharacteristic != null) {
-                        //mBluetoothLeService.setCharacteristicNotification(mNotifyCharacteristic, false);
-                        mNotifyCharacteristic = null;
-                    }
-                    mBluetoothLeService.readCharacteristic(characteristic);
+
+
+            //READS CHARACTERISTIC
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    BluetoothGattCharacteristic currentChar = characteristicReadQueue.remove();
+
+                    mBluetoothLeService.readCharacteristic(characteristicReadQueue.element());
+                    mBluetoothLeService.setCharacteristicNotification(characteristicReadQueue.element(), true);
+                    characteristicReadQueue.add(currentChar);
+
                 }
-                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                    mNotifyCharacteristic = characteristic;
-                    mBluetoothLeService.setCharacteristicNotification(
-                            characteristic, true);
-                }
-            }
+            }, 2000); //Time in milisecond
+
         }
+
+
     }
 
     //displays data
     private void displayData(String hrData, String o2Data, String motionData, String tempData, String soundData) {
-        if (hrData != null) {
 
-            heartRateValue.setText(hrData);
-            oxygenValue.setText(o2Data);
-            motionValue.setText(motionData);
-            tempValue.setText(tempData);
-            soundValue.setText(soundData);
+
+        //Creates map to upload to cloud
+        Map<String, Object> data = new HashMap<>();
+
+            if (hrData != null) {
+                heartRateValue.setText(hrData);
+                data.put("HR", Integer.parseInt(hrData));
+            }
+            if (o2Data != null) {
+                oxygenValue.setText(o2Data);
+                data.put("O2", Integer.parseInt(o2Data));
+            }
+            else
+                data.put("O2", "--");
+            if (motionData != null) {
+                motionValue.setText(motionData);
+                data.put("Motion", Integer.parseInt(motionData));
+            }
+            else
+                data.put("Motion", "--");
+            if (tempData != null) {
+                tempValue.setText(tempData);
+                data.put("Temp", Integer.parseInt(tempData));
+            }
+            else
+                data.put("Temp", "--");
+            if (soundData != null) {
+                soundValue.setText(soundData);
+                data.put("Sound", Integer.parseInt(soundData));
+            }
+            else
+                data.put("Sound", "--");
 
             checkForAlerts(hrData, o2Data, motionData, tempData, soundData);
-
-            //Creates map to upload to cloud
-            Map<String, Object> data = new HashMap<>();
-            data.put("HR", Integer.parseInt(hrData));
-            data.put("O2", "--");
-            data.put("Motion", "--");
-            data.put("Sound", "--");
-            data.put("Temp", "--");
 
             //Upload data to cloud
             uploadToFirestore(data);
 
-        }
+
     }
 
     private void checkForAlerts(String hrData, String o2Data, String motionData, String tempData, String soundData){
-        //retrieve data
-        int HRdata = Integer.parseInt(hrData);
-
-
+        int hrDataNum;
+        int o2DataNum;
+        int motionDataNum;
+        int tempDataNum;
+        int soundDataNum;
         //70-190 bpm is healthy resting heart rate for a newborn
         int HRmin = 80;
         int HRmax = 190;
-        Alerts(HRmax, HRmin, HRdata);
+
+        //retrieve data
+        if (hrData != null) {
+            hrDataNum = Integer.parseInt(hrData);
+            Alerts(HRmax, HRmin, hrDataNum);
+        }
+        if (o2Data != null)
+            o2DataNum = Integer.parseInt(o2Data);
+        if (motionData != null)
+            motionDataNum = Integer.parseInt(motionData);
+        if (tempData != null)
+            tempDataNum = Integer.parseInt(tempData);
+        if (soundData != null)
+            soundDataNum = Integer.parseInt(soundData);
+
+
 
         /**   Add alerts for all other sensors, make sure correct sensor is sent.
          * Maybe add parameter saying which sensor
@@ -506,9 +556,6 @@ public class MainActivity extends AppCompatActivity {
             alerts.setText("Healthy Environment.");
             hrBackground.setBackgroundColor(getColor(R.color.sensorBackgroundColor));
         }
-
-
-
 
     }
 

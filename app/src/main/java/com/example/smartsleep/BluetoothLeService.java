@@ -68,17 +68,18 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
-    public final static String HR_DATA = "HR";
+    /**public final static String HR_DATA = "HR";
     public final static String O2_DATA = "O2";
     public final static String SOUND_DATA = "SOUND";
     public final static String MOTION_DATA = "MOTION";
-    public final static String TEMP_DATA = "TEMP";
+    public final static String TEMP_DATA = "TEMP";*/
+    public final static String[] SENSOR_DATA = new String[5];
 
     private String hr_data, o2_data, sound_data, motion_data, temp_data;
 
     //Creates queue to handle multi-characteristic read
-    private Queue<Runnable> commandQueue;
-    private boolean commandQueueBusy;
+    //private Queue<Runnable> commandQueue;
+    //private boolean commandQueueBusy;
 
     //TODO: add all characteristics
     public UUID UUID_HEART_RATE_MEASUREMENT;
@@ -167,65 +168,53 @@ public class BluetoothLeService extends Service {
             }
             final int heartRate = characteristic.getIntValue(format, 1);
             Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(HR_DATA, String.valueOf(heartRate));
-        }
-        else if (UUID_O2_MEASUREMENT.equals(characteristic.getUuid())) {
-            // For all other profiles, writes the data formatted in HEX.
-            int flag = characteristic.getProperties();
-            int format = -1;
-            if ((flag & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "O2 format UINT16.");
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "O2 format UINT8.");
-            }
-            final int data = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received O2: %d", data));
-            intent.putExtra(O2_DATA, String.valueOf(data));
-        }
-        else if (UUID_SOUND_MEASUREMENT.equals(characteristic.getUuid())) {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                Log.d(TAG, String.format("Received SOUND: %d", data));
-                intent.putExtra(SOUND_DATA, new String(data) + "\n" + stringBuilder.toString());
-            }
-
-        }
-        else if (UUID_MOTION_MEASUREMENT.equals(characteristic.getUuid())) {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(MOTION_DATA, new String(data) + "\n" + stringBuilder.toString());
-            }
-        }
-        else if (UUID_TEMP_MEASUREMENT.equals(characteristic.getUuid())) {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(TEMP_DATA, new String(data) + "\n" + stringBuilder.toString());
-            }
+            //intent.putExtra(HR_DATA, String.valueOf(heartRate));
+            SENSOR_DATA[0] = String.valueOf(heartRate);
         }
         else {
-                // For all other profiles, writes the data formatted in HEX.
-                final byte[] data = characteristic.getValue();
+            final byte[] data = characteristic.getValue();
+            String finalData = "";
+            if (data != null)
+            {
+                final StringBuilder stringBuilder = new StringBuilder(data.length);
                 if (data != null && data.length > 0) {
-                    final StringBuilder stringBuilder = new StringBuilder(data.length);
                     for (byte byteChar : data)
-                        stringBuilder.append(String.format("%02X ", byteChar));
-                    intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
+                        stringBuilder.append(String.format("%02d", byteChar));
                 }
+
+                finalData = stringBuilder.toString();
             }
+
+
+
+            //Sends data as intent named for correct sensor
+            if (UUID_O2_MEASUREMENT.equals(characteristic.getUuid())) {
+                Log.d(TAG, String.format("Received O2: " + finalData));
+                //intent.putExtra(O2_DATA, finalData);
+                SENSOR_DATA[1] = String.valueOf(finalData);
+            }
+            else if (UUID_MOTION_MEASUREMENT.equals(characteristic.getUuid())) {
+                Log.d(TAG, String.format("Received MOTION: %d", finalData));
+                //intent.putExtra(MOTION_DATA, String.valueOf(finalData));
+                SENSOR_DATA[2] = String.valueOf(finalData);
+            }
+            else if (UUID_TEMP_MEASUREMENT.equals(characteristic.getUuid())) {
+                Log.d(TAG, String.format("Received TEMP: %d", finalData));
+                //intent.putExtra(TEMP_DATA, String.valueOf(finalData));
+                SENSOR_DATA[3] = String.valueOf(finalData);
+            }
+            else if (UUID_SOUND_MEASUREMENT.equals(characteristic.getUuid())) {
+                Log.d(TAG, String.format("Received SOUND: %d", finalData));
+                //intent.putExtra(SOUND_DATA, String.valueOf(finalData));
+                SENSOR_DATA[4] = String.valueOf(finalData);
+            }
+            //Handles receiving of unknown char in case of error
+            else {
+                Log.d(TAG, "Unknown Char Received: " + finalData);
+            }
+        }
+
+        intent.putExtra("SENSOR_DATA", SENSOR_DATA);
         sendBroadcast(intent);
     }
 
