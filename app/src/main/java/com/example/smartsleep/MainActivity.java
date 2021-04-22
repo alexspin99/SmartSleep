@@ -331,17 +331,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    private void updateConnectionState(final int resourceId) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                connectionTextBox.setText(resourceId);
-            }
-        });
-    }
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -363,6 +352,16 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         unbindService(mServiceConnection);
         mBluetoothLeService = null;
+    }
+
+
+    private void updateConnectionState(final int resourceId) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                connectionTextBox.setText(resourceId);
+            }
+        });
     }
 
     //retrieves Gatt services & characteristics from device.  Stores values of chars needed to be read
@@ -472,6 +471,8 @@ public class MainActivity extends AppCompatActivity {
                 heartRateValue.setText(hrData);
                 data.put("HR", Integer.parseInt(hrData));
             }
+            else
+                data.put("HR", "--");
             if (o2Data != null) {
                 oxygenValue.setText(o2Data);
                 data.put("O2", Integer.parseInt(o2Data));
@@ -514,58 +515,88 @@ public class MainActivity extends AppCompatActivity {
         //70-190 bpm is healthy resting heart rate for a newborn
         int HRmin = 80;
         int HRmax = 190;
+        //89-97 % is healthy (https://pubmed.ncbi.nlm.nih.gov/28154110/)
+        int o2min = 89;
+        int o2max = 97;
+        //Based on our motion sensor data
+        int motionmin = 0;
+        int motionmax = 5;
+        //Recommended room temp for baby sleeping
+        int tempmin = 68;
+        int tempmax = 72;
+        //Based on our sound sensor data
+        int soundmin = 0;
+        int soundmax = 10;
+
 
         //retrieve data
         if (hrData != null) {
             hrDataNum = Integer.parseInt(hrData);
-            Alerts(HRmax, HRmin, hrDataNum);
+            Alerts("HEART  RATE", HRmax, HRmin, hrDataNum);
         }
-        if (o2Data != null)
+        if (o2Data != null) {
             o2DataNum = Integer.parseInt(o2Data);
-        if (motionData != null)
+            Alerts("OXYGEN LEVEL", o2max, o2min, o2DataNum);
+        }
+        if (motionData != null) {
             motionDataNum = Integer.parseInt(motionData);
-        if (tempData != null)
+            Alerts("MOTION", motionmax, motionmin, motionDataNum);
+        }
+        if (tempData != null) {
             tempDataNum = Integer.parseInt(tempData);
-        if (soundData != null)
+            Alerts("TEMP", tempmax, tempmin, tempDataNum);
+        }
+        if (soundData != null) {
             soundDataNum = Integer.parseInt(soundData);
-
-
-
-        /**   Add alerts for all other sensors, make sure correct sensor is sent.
-         * Maybe add parameter saying which sensor
-        Alerts(O2max, O2min, o2Data);
-        Alerts(MotionMax, MotionMin, motionData);
-        Alerts(TempMax, TempMin, tempData);
-        Alerts(SoundMax, SoundMin, soundData);
-         **/
+            Alerts("SOUND", soundmax, soundmin, soundDataNum);
+        }
 
 
     }
 
-    private void Alerts(int HRmax, int HRmin, int HRdata){
+    private void Alerts(String sensor, int max, int min, int data){
 
-        if (HRdata > HRmax) {
-            alerts.setText("HIGH HEART RATE");
-            hrBackground.setBackgroundColor(getColor(R.color.alert));
+        if (data > max) {
+            alerts.setText("HIGH " + sensor);
+            setAlertBackgroundColor(sensor, true);
         }
-        else if (HRdata < HRmin) {
-            alerts.setText("LOW HEART RATE");
-            hrBackground.setBackgroundColor(getColor(R.color.alert));
+        else if (data < min) {
+            alerts.setText("LOW " + sensor);
+            setAlertBackgroundColor(sensor, true);
         }
         else {
             alerts.setText("Healthy Environment.");
-            hrBackground.setBackgroundColor(getColor(R.color.sensorBackgroundColor));
+            setAlertBackgroundColor(sensor, false);
         }
 
+    }
+
+    private void setAlertBackgroundColor (String sensor, boolean alert){
+
+        //Chooses color to set background
+        int color;
+        if (alert)
+            color = getColor(R.color.alert);
+        else
+            color = getColor(R.color.sensorBackgroundColor);
+
+
+        if (sensor == "HEART RATE")
+            hrBackground.setBackgroundColor(color);
+        else if (sensor == "OXYGEN LEVEL")
+            o2Background.setBackgroundColor(color);
+        else if (sensor == "SOUND")
+            soundBackground.setBackgroundColor(color);
+        else if (sensor == "TEMP")
+            tempBackground.setBackgroundColor(color);
+        else if (sensor == "MOTION")
+            motionBackground.setBackgroundColor(color);
     }
 
     private void uploadToFirestore(Map<String, Object> data){
         String currentTime = new Date().toString();
 
         //create document path to user
-
-
-
         if (userDatabase != null){
             userDatabase.collection("data").document(currentTime)
                     .set(data)
@@ -582,6 +613,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         }
+        //Uses "noUser" path if no one is logged in
         else{
             db.collection("users").document("noUser").collection("data").document(currentTime)
                     .set(data)
@@ -598,12 +630,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         }
-
-
-
     }
-
-
 
 
     //Sign In Functions START ******************************************************************************************************
@@ -728,6 +755,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Sign In Functions END *******************************************************************************************
+
+
 
 
     private static IntentFilter makeGattUpdateIntentFilter() {
