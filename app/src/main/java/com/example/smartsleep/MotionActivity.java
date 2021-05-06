@@ -1,9 +1,12 @@
 package com.example.smartsleep;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
 
 public class MotionActivity extends AppCompatActivity {
 
@@ -17,6 +20,12 @@ public class MotionActivity extends AppCompatActivity {
 
         //TODO: access Firebase to view history of values
         sensorValue.setText("Motion Sensor Value History");
+
+        //create graph
+        TimeSeriesGraph graph = new TimeSeriesGraph();
+        Intent intent = getIntent();
+        ArrayList<Integer[]> dataArr = (ArrayList<Integer[]>) intent.getSerializableExtra("GRAPH");
+        graph.constructGraph(this, dataArr);
 
     }
 }

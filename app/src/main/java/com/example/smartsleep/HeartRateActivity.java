@@ -1,5 +1,6 @@
 package com.example.smartsleep;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.transition.Explode;
@@ -8,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class HeartRateActivity extends AppCompatActivity {
@@ -19,13 +21,14 @@ public class HeartRateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sensor);
 
         TextView sensorValue = (TextView) findViewById(R.id.sensorValue);
-
-        //TODO: access Firebase to view history of values
-
-        sensorValue.setText("Heart Rate Sensor History");
+        sensorValue.setText("Heart Rate Sensor Value History");
 
 
-
+        //create graph
+        TimeSeriesGraph graph = new TimeSeriesGraph();
+        Intent intent = getIntent();
+        ArrayList<Integer[]> dataArr = (ArrayList<Integer[]>) intent.getSerializableExtra("GRAPH");
+        graph.constructGraph(this, dataArr);
 
 
     }

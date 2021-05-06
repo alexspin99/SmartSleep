@@ -68,11 +68,8 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
-    /**public final static String HR_DATA = "HR";
-    public final static String O2_DATA = "O2";
-    public final static String SOUND_DATA = "SOUND";
-    public final static String MOTION_DATA = "MOTION";
-    public final static String TEMP_DATA = "TEMP";*/
+
+    //String array to hold read sensor values
     public final static String[] SENSOR_DATA = new String[5];
 
     private String hr_data, o2_data, sound_data, motion_data, temp_data;

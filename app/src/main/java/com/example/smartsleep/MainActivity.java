@@ -49,10 +49,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.jjoe64.graphview.GraphView;
 
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -63,10 +66,30 @@ import java.util.Queue;
 
 public class MainActivity extends AppCompatActivity {
 
-    //TODO: Delete this when scanning for device by name is implemented
-    //Change this depending on the address of your sample peripheral
-    String mDeviceAddress = "66:93:13:80:9B:D4";
+    //Connects to device with below address
+    String mDeviceAddress = "46:EA:F1:CA:E9:57";
     String deviceName = "SmartSock";
+
+    /**
+     * Threshold values for sensor data
+     */
+    //70-190 bpm is healthy resting heart rate for a newborn
+    int HRmin = 80;
+    int HRmax = 190;
+    //89-97 % is healthy (https://pubmed.ncbi.nlm.nih.gov/28154110/)
+    int o2min = 89;
+    int o2max = 97;
+    //Based on our motion sensor data
+    int motionmin = 0;
+    int motionmax = 5;
+    //Recommended room temp for baby sleeping
+    int tempmin = 68;
+    int tempmax = 72;
+    //Based on our sound sensor data
+    int soundmin = 0;
+    int soundmax = 10;
+
+
 
     //private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
@@ -97,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
     private int RC_SIGN_IN = 1;
+    ArrayList<Integer[]> tempGraph = new ArrayList<>(), motionGraph = new ArrayList<>(),
+            soundGraph = new ArrayList<>(), hrGraph  = new ArrayList<>(), o2Graph = new ArrayList<>();
 
     //stores characteristic of each sensor characteristic, initializes to null so it doesn't crash if it doesn't find characteristic
     BluetoothGattCharacteristic hrGattChar = null, o2GattChar = null , soundGattChar = null, motionGattChar = null, tempGattChar = null;
@@ -105,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
     //textViews for sensor values
     TextView oxygenValue, tempValue, soundValue, motionValue, heartRateValue, alerts;
     ConstraintLayout hrBackground, o2Background, tempBackground, soundBackground, motionBackground;
-
 
 
 
@@ -280,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
         //Set HeartRate click
         hrBackground.setOnClickListener(view -> {
             Intent heartRateIntent = new Intent(MainActivity.this, HeartRateActivity.class);
+            heartRateIntent.putExtra("GRAPH", hrGraph);
             startActivity(heartRateIntent);
         });
 
@@ -288,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
         //Set OxygenLevels click
         o2Background.setOnClickListener(view -> {
             Intent oxygenLevelsIntent = new Intent(MainActivity.this, OxygenLevelsActivity.class);
+            oxygenLevelsIntent.putExtra("GRAPH", o2Graph);
             startActivity(oxygenLevelsIntent);
         });
 
@@ -296,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
         //Set Motion click
         motionBackground.setOnClickListener(view -> {
             Intent motionIntent = new Intent(MainActivity.this, MotionActivity.class);
+            motionIntent.putExtra("GRAPH", motionGraph);
             startActivity(motionIntent);
         });
 
@@ -304,6 +331,7 @@ public class MainActivity extends AppCompatActivity {
         //Set Temperature click
         tempBackground.setOnClickListener(view -> {
             Intent temperatureIntent = new Intent(MainActivity.this, TemperatureActivity.class);
+            temperatureIntent.putExtra("GRAPH", tempGraph);
             startActivity(temperatureIntent);
         });
 
@@ -312,6 +340,7 @@ public class MainActivity extends AppCompatActivity {
         //Set sound click
         soundBackground.setOnClickListener(view -> {
             Intent soundIntent = new Intent(MainActivity.this, SoundActivity.class);
+            soundIntent.putExtra("GRAPH", soundGraph);
             startActivity(soundIntent);
         });
 
@@ -439,9 +468,6 @@ public class MainActivity extends AppCompatActivity {
     private void getCharacteristicValues()
     {
         if (!characteristicReadQueue.isEmpty()) {
-
-
-
             //READS CHARACTERISTIC
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -451,48 +477,60 @@ public class MainActivity extends AppCompatActivity {
                     mBluetoothLeService.readCharacteristic(characteristicReadQueue.element());
                     mBluetoothLeService.setCharacteristicNotification(characteristicReadQueue.element(), true);
                     characteristicReadQueue.add(currentChar);
-
                 }
             }, 2000); //Time in milisecond
-
         }
-
-
     }
+
 
     //displays data
     private void displayData(String hrData, String o2Data, String motionData, String tempData, String soundData) {
 
-
         //Creates map to upload to cloud
         Map<String, Object> data = new HashMap<>();
+        Calendar calendar = Calendar.getInstance();
+        Integer time = (int)(long) calendar.getTimeInMillis();
 
             if (hrData != null) {
                 heartRateValue.setText(hrData);
+                Integer[] dataArr = {time, Integer.parseInt(hrData)};
+                hrGraph.add(dataArr);
                 data.put("HR", Integer.parseInt(hrData));
             }
             else
                 data.put("HR", "--");
+
             if (o2Data != null) {
                 oxygenValue.setText(o2Data);
+                Integer[] dataArr = {time, Integer.parseInt(o2Data)};
+                o2Graph.add(dataArr);
                 data.put("O2", Integer.parseInt(o2Data));
             }
             else
                 data.put("O2", "--");
+
             if (motionData != null) {
                 motionValue.setText(motionData);
+                Integer[] dataArr = {time, Integer.parseInt(motionData)};
+                motionGraph.add(dataArr);
                 data.put("Motion", Integer.parseInt(motionData));
             }
             else
                 data.put("Motion", "--");
+
             if (tempData != null) {
                 tempValue.setText(tempData);
+                Integer[] dataArr = {time, Integer.parseInt(tempData)};
+                tempGraph.add(dataArr);
                 data.put("Temp", Integer.parseInt(tempData));
             }
             else
                 data.put("Temp", "--");
+
             if (soundData != null) {
                 soundValue.setText(soundData);
+                Integer[] dataArr = {time, Integer.parseInt(soundData)};
+                soundGraph.add(dataArr);
                 data.put("Sound", Integer.parseInt(soundData));
             }
             else
@@ -512,23 +550,7 @@ public class MainActivity extends AppCompatActivity {
         int motionDataNum;
         int tempDataNum;
         int soundDataNum;
-        //70-190 bpm is healthy resting heart rate for a newborn
-        int HRmin = 80;
-        int HRmax = 190;
-        //89-97 % is healthy (https://pubmed.ncbi.nlm.nih.gov/28154110/)
-        int o2min = 89;
-        int o2max = 97;
-        //Based on our motion sensor data
-        int motionmin = 0;
-        int motionmax = 5;
-        //Recommended room temp for baby sleeping
-        int tempmin = 68;
-        int tempmax = 72;
-        //Based on our sound sensor data
-        int soundmin = 0;
-        int soundmax = 10;
-
-
+        
         //retrieve data
         if (hrData != null) {
             hrDataNum = Integer.parseInt(hrData);
